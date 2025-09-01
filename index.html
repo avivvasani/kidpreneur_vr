@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kidpreneur Web App</title>
+  <!-- Apple-like font and a fallback -->
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #007aff;
+      --secondary-color: #ff3b30;
+      --tertiary-color: #34c759;
+      --text-color: #fff;
+      --bg-color: #000;
+      --card-bg: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.15);
+      --dock-bg: rgba(255, 255, 255, 0.1);
+    }
+
+    /* General reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "SF Pro Display", -apple-system, system-ui, sans-serif;
+      color: var(--text-color);
+      min-height: 100vh;
+      background: var(--bg-color);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Animated gradient background */
+    .bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -3;
+      background: radial-gradient(at 20% 30%, #34c759, transparent 60%),
+                  radial-gradient(at 80% 20%, #ff3b30, transparent 60%),
+                  radial-gradient(at 50% 80%, #007aff, transparent 60%);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -2;
+    }
+
+    .particle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      filter: blur(6px);
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-100vh); }
+    }
+
+    /* Main Content Sections */
+    .section {
+      width: 100%;
+      min-height: 100vh;
+      padding: 100px 5% 150px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.8s ease-in-out, visibility 0.8s;
+      overflow-y: auto;
+    }
+
+    .section.active {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 1s ease-in-out, visibility 0s;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1, h2 {
+      font-weight: 800;
+      letter-spacing: -1px;
+      text-align: center;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+    h1 {
+      font-size: clamp(3rem, 8vw, 6rem);
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      margin-bottom: 20px;
+    }
+    
+    .subtitle {
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.8);
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Dock & Navigation */
+    .dock {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--dock-bg);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 20px;
+      border-radius: 50px;
+      display: flex;
+      gap: 20px;
+      z-index: 100;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+    }
+    .dock a {
+      display: block;
+      transition: transform 0.2s ease-out;
+      padding: 5px;
+      border-radius: 50%;
+      background: transparent;
+    }
+    .dock a:hover {
+      transform: translateY(-10px);
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .dock svg {
+      width: 32px;
+      height: 32px;
+      fill: var(--text-color);
+    }
+    
+    /* Individual section styles */
+    #home.active h1, #home.active .subtitle, #home.active .app-grid a {
+      animation: springIn 1s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #home.active .app-grid a {
+      animation-delay: var(--delay);
+    }
+
+    .app-grid {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .app-grid a {
+      text-decoration: none;
+      color: var(--text-color);
+      text-align: center;
+      width: 120px;
+      opacity: 0;
+    }
+    .app-grid .icon-wrapper {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 10px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .app-grid svg {
+      width: 50px;
+      height: 50px;
+      fill: var(--text-color);
+    }
+    .app-grid span {
+      font-weight: 500;
+    }
+
+    #about p, #explore p {
+      line-height: 1.8;
+      font-size: clamp(1rem, 2vw, 1.1rem);
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .card-grid .card h3 {
+      font-weight: 700;
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+    }
+    .card-grid .card p {
+      line-height: 1.5;
+      font-size: 1rem;
+    }
+
+    #ideas form {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    #ideas input, #ideas textarea {
+      padding: 15px;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-color);
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+    #ideas input::placeholder, #ideas textarea::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+    #ideas input:focus, #ideas textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+    #ideas button {
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary-color);
+      color: var(--text-color);
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #ideas button:hover {
+      background: #0060d9;
+    }
+    #ideas button:active {
+      transform: scale(0.98);
+    }
+
+    #gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      margin-top: 40px;
+    }
+    #gallery .card {
+      text-align: center;
+    }
+    #gallery .card .icon-placeholder {
+      width: 60px;
+      height: 60px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin: 0 auto 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    #gallery .card h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    #gallery .card p {
+      font-size: 0.9rem;
+      color: #bbb;
+    }
+    
+    /* Inspiration Timeline */
+    .timeline {
+      position: relative;
+      padding: 20px 0;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateX(-50%);
+    }
+    .entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      position: relative;
+    }
+    .entry.right {
+      flex-direction: row-reverse;
+    }
+    .entry .content {
+      width: 45%;
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      padding: 20px;
+      opacity: 0;
+    }
+    .entry.right .content {
+      text-align: left;
+    }
+    .entry.left .content {
+      text-align: right;
+    }
+    .entry .dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      border: 2px solid var(--text-color);
+      z-index: 1;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    /* Footer */
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      padding: 10px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.8rem;
+    }
+
+    /* Modal for gallery popups */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+    }
+    .modal-content {
+      background: #111;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 90%;
+      max-height: 90%;
+      overflow-y: auto;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .close-modal {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="particles"></div>
+
+  <!-- Main Sections -->
+  <div id="home" class="section active">
+    <h1>KIDPRENEUR</h1>
+    <p class="subtitle">A WORLD FOR YOUNG ENTREPRENEURS</p>
+    <div class="app-grid">
+      <a href="#" data-target="about" style="--delay: 0s;">
+        <div class="icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-144c-17.7 0-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32s-14.3 32-32 32z"/></svg>
+        </div>
+        <span>About</span>
+      </a>
+      <a href="#" data-target="explore" style="--delay: 0.1s;">
+        <div class="icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg>
+        </div>
+        <span>Explore</span>
+      </a>
+      <a href="#" data-target="ideas" style="--delay: 0.2s;">
+        <div class="icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M128 0c17.7 0 32 14.3 32 32V64c0 17.7-14.3 32-32 32s-32-14.3-32-32V32c0-17.7 14.3-32 32-32zM80 128c0 17.7 14.3 32 32 32H336c17.7 0 32-14.3 32-32s-14.3-32-32-32H112c-17.7 0-32 14.3-32 32zm0 96c0 17.7 14.3 32 32 32H336c17.7 0 32-14.3 32-32s-14.3-32-32-32H112c-17.7 0-32 14.3-32 32zm80 96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H192c-17.7 0-32 14.3-32 32zM320 480c0 17.7 14.3 32 32 32s32-14.3 32-32V448c0-17.7-14.3-32-32-32s-32 14.3-32 32v32zm-64-32c0 17.7 14.3 32 32 32s32-14.3 32-32V384c0-17.7-14.3-32-32-32s-32 14.3-32 32v64zm-64 0c0 17.7 14.3 32 32 32s32-14.3 32-32V384c0-17.7-14.3-32-32-32s-32 14.3-32 32v64zm-64 0c0 17.7 14.3 32 32 32s32-14.3 32-32V384c0-17.7-14.3-32-32-32s-32 14.3-32 32v64z"/></svg>
+        </div>
+        <span>Ideas</span>
+      </a>
+      <a href="#" data-target="gallery" style="--delay: 0.3s;">
+        <div class="icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M464 256A208 208 0 1 1 512 256c0 10.3-1.6 20.4-4.6 30.1L512 336l-98.3-98.3c-9.7-3-19.8-4.6-30.1-4.6c-54.7 0-99 44.3-99 99c0 10.3 1.6 20.4 4.6 30.1L128 512l29-29c9.7 3 19.8 4.6 30.1 4.6c54.7 0 99-44.3 99-99c0-10.3-1.6-20.4-4.6-30.1L384 128l-29 29c-9.7-3-19.8-4.6-30.1-4.6c-54.7 0-99 44.3-99 99c0 10.3 1.6 20.4 4.6 30.1L128 384l-29 29c-9.7-3-19.8-4.6-30.1-4.6c-54.7 0-99 44.3-99 99c0 10.3 1.6 20.4 4.6 30.1L0 176l98.3 98.3c9.7 3 19.8 4.6 30.1 4.6c54.7 0 99-44.3 99-99c0-10.3-1.6-20.4-4.6-30.1L256 0l29 29c9.7-3 19.8-4.6 30.1-4.6c54.7 0 99 44.3 99 99c0 10.3-1.6 20.4-4.6 30.1L384 128zM192 128a64 64 0 1 0 0 128 64 64 0 1 0 0-128zM320 256a64 64 0 1 0 128 0 64 64 0 1 0-128 0z"/></svg>
+        </div>
+        <span>Gallery</span>
+      </a>
+      <a href="#" data-target="inspiration" style="--delay: 0.4s;">
+        <div class="icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M486.2 256c.7-1.1 1.3-2.3 1.9-3.4c.5-.9 1-1.8 1.5-2.8c.4-.7 .8-1.5 1.1-2.3c.3-.6 .5-1.3 .8-2c.3-.8 .5-1.6 .7-2.5c.2-.6 .3-1.3 .4-2c.2-.9 .2-1.9 .2-2.8c0-1.8-.2-3.6-.5-5.3c-.3-.9-.6-1.8-1-2.7c-.4-.9-.8-1.8-1.3-2.6c-.4-.7-.8-1.5-1.3-2.2c-.4-.7-.9-1.3-1.4-2c-1.3-1.8-2.7-3.5-4.2-5.1c-1-.9-2.1-1.8-3.2-2.6c-1.1-1-2.2-1.9-3.4-2.8C430.2 170.1 369.3 144 256 144c-113.3 0-174.2 26.1-229.8 52.2c-1.2 .9-2.3 1.8-3.4 2.8c-1.5 1.6-2.9 3.3-4.2 5.1c-.5 .7-1 1.3-1.4 2c-.5 .7-.9 1.5-1.3 2.2c-.4 .9-.8 1.8-1 2.7c-.3 1.8-.5 3.6-.5 5.3c0 .9 .1 1.9 .2 2.8c.1 .7 .2 1.4 .4 2c.2 .9 .4 1.7 .7 2.5c.3 .8 .7 1.6 1.1 2.3c.5 1 1 1.9 1.5 2.8c.6 1.1 1.3 2.3 1.9 3.4c.7 1.2 1.5 2.4 2.3 3.6c.4 .7 .9 1.3 1.4 2c1.2 1.7 2.4 3.3 3.7 4.9l.4 .4c.9 1.1 1.9 2.2 2.9 3.2c.8 .8 1.6 1.5 2.4 2.3c.7 .6 1.4 1.2 2.1 1.8c.5 .4 1 .8 1.5 1.2l47.9 33.5c1.1 .8 2.3 1.5 3.4 2.2c1.4 .9 2.8 1.7 4.2 2.5c3.5 2 7.3 3.6 11.2 5c6.8 2.5 14 3.9 21.2 4.4l1.3 .1 .1 0 0 0 0 0 0 0 0 0c.9 .1 1.8 .1 2.7 .1H256h.1c.9 0 1.8 0 2.7-.1l1.3-.1c7.2-.5 14.4-1.9 21.2-4.4c3.9-1.4 7.7-3 11.2-5c1.4-.8 2.8-1.6 4.2-2.5c1.2-.7 2.3-1.5 3.4-2.2l47.9-33.5c.5-.4 1-.8 1.5-1.2c.7-.6 1.4-1.2 2.1-1.8c.8-.8 1.6-1.5 2.4-2.3c1-.9 2-2.1 2.9-3.2l.4-.4c1.3-1.6 2.5-3.2 3.7-4.9c.5-.7 1-1.3 1.4-2c.8-1.2 1.6-2.4 2.3-3.6zM320 336a64 64 0 1 0 0-128 64 64 0 1 0 0 128z"/></svg>
+        </div>
+        <span>Inspiration</span>
+      </a>
+    </div>
+  </div>
+
+  <div id="about" class="section">
+    <div class="container">
+      <h2>ABOUT US</h2>
+      <p>
+        Kidpreneur is an initiative by **CodeAGS** at the **Ashoka Group of Schools**, designed to ignite the entrepreneurial spirit in young minds. Our mission is to provide a platform where students can learn, explore, and innovate, transforming their creative ideas into tangible projects. We believe that every child has the potential to be a leader and a creator, and Kidpreneur is here to nurture that potential.
+      </p>
+      <p>
+        This website is a testament to our commitment to hands-on learning. It serves as a digital hub where students can not only discover foundational business concepts but also gain practical experience in thinking like an entrepreneur. From brainstorming innovative ideas to showcasing their projects, we provide the tools and inspiration needed to embark on a journey of enterprise. We are proud to foster a community of aspiring young business leaders who are ready to shape the future.
+      </p>
+    </div>
+  </div>
+
+  <div id="explore" class="section">
+    <div class="container">
+      <h2>EXPLORE YOUR PATH</h2>
+      <p style="text-align: center; margin-bottom: 2rem;">
+        Every great journey begins with a single step. Use these categories to find a business path that sparks your interest.
+      </p>
+      <div class="card-grid">
+        <div class="card">
+          <h3>Technology</h3>
+          <p>Tech-focused businesses are all about innovation. Think about creating a simple app to solve a problem, designing a website for local businesses, or even starting a coding club. The possibilities are endless in the digital world.</p>
+        </div>
+        <div class="card">
+          <h3>Arts & Crafts</h3>
+          <p>If you love to create, this is for you. From selling handmade jewelry and custom art to creating personalized greeting cards, this path lets you turn your artistic talents into a profitable venture.</p>
+        </div>
+        <div class="card">
+          <h3>Services</h3>
+          <p>Sometimes the best business is a service. Consider starting a lawn-mowing service, a dog-walking business, or offering tutoring to younger students. Services are a great way to meet a direct need in your community.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ideas" class="section">
+    <h2>SUBMIT YOUR IDEA</h2>
+    <p style="text-align: center; color: rgba(255,255,255,0.7);">Have a brilliant business idea? Tell us about it!</p>
+    <form>
+      <input type="text" id="idea-name" placeholder="Name of your idea" required>
+      <textarea id="idea-description" placeholder="Describe your idea in a few sentences..." rows="5" required></textarea>
+      <input type="email" id="idea-email" placeholder="Your Email (Optional)">
+      <button type="submit">SUBMIT IDEA</button>
+    </form>
+    <p id="submission-message" style="text-align: center; margin-top: 20px;"></p>
+  </div>
+  
+  <div id="gallery" class="section">
+    <div class="container">
+      <h2>GALLERY OF IDEAS</h2>
+      <p style="text-align: center; color: rgba(255,255,255,0.7);">Check out these awesome ideas created by other young entrepreneurs!</p>
+      <div id="gallery-grid"></div>
+    </div>
+  </div>
+
+  <div id="inspiration" class="section">
+    <div class="container">
+      <h2>INSPIRATION TIMELINE</h2>
+      <p style="text-align: center; color: rgba(255,255,255,0.7);">Learn from the journeys of history's most inspiring entrepreneurs.</p>
+      <div class="timeline">
+        <div class="entry right">
+          <div class="content card">
+            <h3>Steve Jobs</h3>
+            <p>Co-founder of Apple Inc. and a pioneer of the personal computer revolution, Jobs was known for his visionary leadership and aesthetic design philosophy.</p>
+          </div>
+          <div class="dot"></div>
+        </div>
+        <div class="entry left">
+          <div class="content card">
+            <h3>Oprah Winfrey</h3>
+            <p>A media executive, actress, talk show host, television producer, and philanthropist. She is best known for her talk show, The Oprah Winfrey Show, which was the highest-rated talk show in television history.</p>
+          </div>
+          <div class="dot"></div>
+        </div>
+        <div class="entry right">
+          <div class="content card">
+            <h3>Walt Disney</h3>
+            <p>An American entrepreneur, animator, writer, voice actor, and film producer. A pioneer of the American animation industry, he introduced several developments in the production of cartoons.</p>
+          </div>
+          <div class="dot"></div>
+        </div>
+        <div class="entry left">
+          <div class="content card">
+            <h3>J.K. Rowling</h3>
+            <p>The author of the Harry Potter fantasy series. She went from being a single mother living on state benefits to one of the world's most successful writers, an example of perseverance.</p>
+          </div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dock Navigation -->
+  <div class="dock">
+    <a href="#home" data-target="home">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M542.4 200.5l-40-39.7a24 24 0 0 0-33.9 0L288 340.5 105.5 160.8a24 24 0 0 0-33.9 0L31.6 200.5a24 24 0 0 0 0 33.9l224 223.9a24 24 0 0 0 33.9 0l224-223.9a24 24 0 0 0 0-33.9z"/><path d="M542.4 200.5l-40-39.7a24 24 0 0 0-33.9 0L288 340.5 105.5 160.8a24 24 0 0 0-33.9 0L31.6 200.5a24 24 0 0 0 0 33.9l224 223.9a24 24 0 0 0 33.9 0l224-223.9a24 24 0 0 0 0-33.9z"/></svg>
+    </a>
+    <a href="#about" data-target="about">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-144c-17.7 0-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32s-14.3 32-32 32z"/></svg>
+    </a>
+    <a href="#explore" data-target="explore">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg>
+    </a>
+    <a href="#ideas" data-target="ideas">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M128 0c17.7 0 32 14.3 32 32V64c0 17.7-14.3 32-32 32s-32-14.3-32-32V32c0-17.7 14.3-32 32-32zM80 128c0 17.7 14.3 32 32 32H336c17.7 0 32-14.3 32-32s-14.3-32-32-32H112c-17.7 0-32 14.3-32 32zm0 96c0 17.7 14.3 32 32 32H336c17.7 0 32-14.3 32-32s-14.3-32-32-32H112c-17.7 0-32 14.3-32 32zm0 96c0 17.7 14.3 32 32 32H336c17.7 0 32-14.3 32-32s-14.3-32-32-32H112c-17.7 0-32 14.3-32 32zm80 96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H192c-17.7 0-32 14.3-32 32zM320 480c0 17.7 14.3 32 32 32s32-14.3 32-32V448c0-17.7-14.3-32-32-32s-32 14.3-32 32v32zm-64-32c0 17.7 14.3 32 32 32s32-14.3 32-32V384c0-17.7-14.3-32-32-32s-32 14.3-32 32v64zm-64 0c0 17.7 14.3 32 32 32s32-14.3 32-32V384c0-17.7-14.3-32-32-32s-32 14.3-32 32v64zm-64 0c0 17.7 14.3 32 32 32s32-14.3 32-32V384c0-17.7-14.3-32-32-32s-32 14.3-32 32v64z"/></svg>
+    </a>
+    <a href="#gallery" data-target="gallery">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M464 256A208 208 0 1 1 512 256c0 10.3-1.6 20.4-4.6 30.1L512 336l-98.3-98.3c-9.7-3-19.8-4.6-30.1-4.6c-54.7 0-99 44.3-99 99c0 10.3 1.6 20.4 4.6 30.1L128 512l29-29c9.7 3 19.8 4.6 30.1 4.6c54.7 0 99-44.3 99-99c0-10.3-1.6-20.4-4.6-30.1L384 128l-29 29c-9.7-3-19.8-4.6-30.1-4.6c-54.7 0-99 44.3-99 99c0 10.3 1.6 20.4 4.6 30.1L128 384l-29 29c-9.7-3-19.8-4.6-30.1-4.6c-54.7 0-99 44.3-99 99c0 10.3 1.6 20.4 4.6 30.1L0 176l98.3 98.3c9.7 3 19.8 4.6 30.1 4.6c54.7 0 99-44.3 99-99c0-10.3-1.6-20.4-4.6-30.1L256 0l29 29c9.7-3 19.8-4.6 30.1-4.6c54.7 0 99 44.3 99 99c0 10.3-1.6 20.4-4.6 30.1L384 128zM192 128a64 64 0 1 0 0 128 64 64 0 1 0 0-128zM320 256a64 64 0 1 0 128 0 64 64 0 1 0-128 0z"/></svg>
+    </a>
+    <a href="#inspiration" data-target="inspiration">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M486.2 256c.7-1.1 1.3-2.3 1.9-3.4c.5-.9 1-1.8 1.5-2.8c.4-.7 .8-1.5 1.1-2.3c.3-.6 .5-1.3 .8-2c.3-.8 .5-1.6 .7-2.5c.2-.6 .3-1.3 .4-2c.2-.9 .2-1.9 .2-2.8c0-1.8-.2-3.6-.5-5.3c-.3-.9-.6-1.8-1-2.7c-.4-.9-.8-1.8-1.3-2.6c-.4-.7-.8-1.5-1.3-2.2c-.4-.7-.9-1.3-1.4-2c-1.3-1.8-2.7-3.5-4.2-5.1c-1-.9-2.1-1.8-3.2-2.6c-1.1-1-2.2-1.9-3.4-2.8C430.2 170.1 369.3 144 256 144c-113.3 0-174.2 26.1-229.8 52.2c-1.2 .9-2.3 1.8-3.4 2.8c-1.5 1.6-2.9 3.3-4.2 5.1c-.5 .7-1 1.3-1.4 2c-.5 .7-.9 1.5-1.3 2.2c-.4 .9-.8 1.8-1 2.7c-.3 1.8-.5 3.6-.5 5.3c0 .9 .1 1.9 .2 2.8c.1 .7 .2 1.4 .4 2c.2 .9 .4 1.7 .7 2.5c.3 .8 .7 1.6 1.1 2.3c.5 1 1 1.9 1.5 2.8c.6 1.1 1.3 2.3 1.9 3.4c.7 1.2 1.5 2.4 2.3 3.6c.4 .7 .9 1.3 1.4 2c1.2 1.7 2.4 3.3 3.7 4.9l.4 .4c.9 1.1 1.9 2.2 2.9 3.2c.8 .8 1.6 1.5 2.4 2.3c.7 .6 1.4 1.2 2.1 1.8c.5 .4 1 .8 1.5 1.2l47.9 33.5c1.1 .8 2.3 1.5 3.4 2.2c1.4 .9 2.8 1.7 4.2 2.5c3.5 2 7.3 3.6 11.2 5c6.8 2.5 14 3.9 21.2 4.4l1.3 .1 .1 0 0 0 0 0 0 0 0 0c.9 .1 1.8 .1 2.7 .1H256h.1c.9 0 1.8 0 2.7-.1l1.3-.1c7.2-.5 14.4-1.9 21.2-4.4c3.9-1.4 7.7-3 11.2-5c1.4-.8 2.8-1.6 4.2-2.5c1.2-.7 2.3-1.5 3.4-2.2l47.9-33.5c.5-.4 1-.8 1.5-1.2c.7-.6 1.4-1.2 2.1-1.8c.8-.8 1.6-1.5 2.4-2.3c1-.9 2-2.1 2.9-3.2l.4-.4c1.3-1.6 2.5-3.2 3.7-4.9c.5-.7 1-1.3 1.4-2c.8-1.2 1.6-2.4 2.3-3.6zM320 336a64 64 0 1 0 0-128 64 64 0 1 0 0 128z"/></svg>
+    </a>
+  </div>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Particle generator
+      const particlesContainer = document.querySelector('.particles');
+      for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.classList.add('particle');
+        const size = Math.random() * 20 + 10;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.top = Math.random() * 100 + '%';
+        p.style.background = `rgba(255,255,255,${Math.random() * 0.12 + 0.05})`;
+        p.style.animationDuration = `${Math.random() * 30 + 30}s`;
+        particlesContainer.appendChild(p);
+      }
+
+      const sections = document.querySelectorAll('.section');
+      const navLinks = document.querySelectorAll('.dock a, .app-grid a');
+      const galleryGrid = document.getElementById('gallery-grid');
+      const modal = document.getElementById('modal');
+      const modalBody = document.getElementById('modal-body');
+      const closeModalBtn = document.querySelector('.close-modal');
+      const submissionMessage = document.getElementById('submission-message');
+
+      function setActiveSection(targetId) {
+        sections.forEach(section => {
+          section.classList.remove('active');
+        });
+        const activeSection = document.getElementById(targetId);
+        if (activeSection) {
+          activeSection.classList.add('active');
+          activeSection.scrollTop = 0;
+          
+          if (targetId === 'inspiration') {
+            animateTimeline();
+          }
+        }
+      }
+
+      navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = e.currentTarget.dataset.target;
+          setActiveSection(target);
+        });
+      });
+
+      // Initially set the home section as active
+      setActiveSection('home');
+
+      // Gallery content & functions
+      const demoIdeas = [
+        { title: "Eco-Friendly T-Shirts", desc: "T-shirts with designs printed on recycled fabric." },
+        { title: "Smart Garden", desc: "An app that helps you grow plants by telling you when they need water and sunlight." },
+        { title: "Kid-Powered Lemonade Stand", desc: "A classic lemonade stand, but with a mobile app to take orders from neighbors." },
+        { title: "Creative Storytelling App", desc: "An app where kids can create and share their own animated stories." }
+      ];
+
+      function createCard(item) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<div class="icon-placeholder">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="#fff"><path d="M480 32H32C14.3 32 0 46.3 0 64v320c0 17.7 14.3 32 32 32h144v48c0 17.7 14.3 32 32 32h128c17.7 0 32-14.3 32-32v-48h144c17.7 0 32-14.3 32-32V64c0-17.7-14.3-32-32-32zM32 400V64h448v336H32z"/></svg>
+          </div>
+          <h3>${item.title}</h3>
+          <p>${item.desc}</p>`;
+        card.onclick = () => openModal(`<h3>${item.title}</h3><p>${item.desc}</p>`);
+        return card;
+      }
+
+      function loadGallery() {
+        galleryGrid.innerHTML = '';
+        demoIdeas.forEach(item => galleryGrid.appendChild(createCard(item)));
+        anime({
+          targets: '#gallery-grid .card',
+          opacity: [0, 1],
+          translateY: [60, 0],
+          delay: anime.stagger(200),
+          duration: 1200,
+          easing: 'spring(1, 80, 12, 0)'
+        });
+      }
+      loadGallery();
+
+      function openModal(content) {
+        modalBody.innerHTML = content;
+        modal.style.display = 'flex';
+      }
+
+      function closeModal() {
+        modal.style.display = 'none';
+        modalBody.innerHTML = '';
+      }
+      closeModalBtn.addEventListener('click', closeModal);
+
+      // Ideas form submission
+      document.querySelector('#ideas form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        submissionMessage.style.display = 'block';
+        submissionMessage.textContent = 'Thank you for your submission!';
+        e.target.reset();
+      });
+
+      // Inspiration timeline animation
+      const timelineEntries = document.querySelectorAll('#inspiration .entry .content');
+      function animateTimeline() {
+        anime({
+          targets: timelineEntries,
+          opacity: [0, 1],
+          translateY: [50, 0],
+          delay: anime.stagger(200),
+          duration: 1200,
+          easing: 'spring(1, 80, 12, 0)'
+        });
+      }
+    });
+  </script>
+</body>
+</html>
